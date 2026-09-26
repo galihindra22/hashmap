@@ -53,11 +53,28 @@ class HashMap {
 
         let current = this.buckets[index];
 
-        while(current){
-            if(current.key === key) return current.value;
+        while (current) {
+            if (current.key === key) return current.value;
+            current = current.next;
         }
 
         return undefined;
+    }
+    has(key) {
+        const index = this.hash(key);
+
+        if (index < 0 || index >= this.buckets.length) {
+            throw new Error("Trying to access index out of bounds");
+        }
+
+        let current = this.buckets[index];
+
+        while (current) {
+            if (current.key === key) return true;
+            current = current.next;
+        }
+
+        return false;
     }
 }
 
