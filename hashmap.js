@@ -5,13 +5,14 @@ class HashMap {
         this.loadFactor = loadFactor;
         this.capacity = capacity;
         this.size = 0;
+        this.buckets = new Array(capacity).fill(null);
     }
 
     hash(key) {
         let hashCode = 0;
 
         for (let i = 0; i < key.length; i++) {
-            hashCode = 31 * hashCode + key.charCodeAt(i);// 31 is primeNumber for unique hashcode
+            hashCode = (31 * hashCode + key.charCodeAt(i)) % this.capacity;// 31 is primeNumber for unique hashcode
         }
 
         return hashCode;
@@ -19,7 +20,7 @@ class HashMap {
     set(key, value) {
         const index = this.hash(key);
 
-        if (index < 0 || index >= buckets.length) {
+        if (index < 0 || index >= this.buckets.length) {
             throw new Error("Trying to access index out of bounds");
         }
 
@@ -28,6 +29,7 @@ class HashMap {
         if (!current) {
             this.buckets[index] = new Node(key, value);
             this.size++;
+            return;
         }
 
         while (current) {
@@ -42,6 +44,7 @@ class HashMap {
         current.next = new Node(key, value);
         this.size++;
 
+        if(this.size > this.capacity * this.loadFactor) this.resize();
     }
 
     get(key) {
@@ -76,6 +79,94 @@ class HashMap {
 
         return false;
     }
-}
+    remove(key) {
+        const index = this.hash(key);
 
+        if (index < 0 || index >= this.buckets.length) {
+            throw new Error("Trying to access index out of bounds");
+        }
+
+        let current = this.buckets[index];
+        let previous = null;
+
+        while (current) {
+            if (current.key === key) {
+                if (previous === null) {
+                    this.buckets[index] = current.next;
+                }
+                else {
+                    previous.next = current.next;
+                }
+                this.size--;
+                return true;
+            }
+            previous = current;
+            current = current.next;
+
+        }
+        return false;
+    }
+    length() {
+        return this.size;
+    }
+    clear() {
+        this.buckets = new Array(this.capacity).fill(null);
+        this.size = 0;
+    }
+    keys() {
+        let result = [];
+
+        for (let i = 0; i < this.buckets.length; i++) {
+            let current = this.buckets[i];
+
+            while (current) {
+                result.push(current.key);
+                current = current.next;
+            }
+        }
+        return result;
+    }
+    values() {
+        let result = [];
+
+        for (let i = 0; i < this.buckets.length; i++) {
+            let current = this.buckets[i];
+
+            while (current) {
+                result.push(current.value);
+                current = current.next;
+            }
+        }
+        return result;
+    }
+    entries() {
+        let result = [];
+
+        for (let i = 0; i < this.buckets.length; i++) {
+            let current = this.buckets[i];
+
+            while (current) {
+                result.push([current.key, current.value]);
+                current = current.next;
+            }
+        }
+        return result;
+    }
+    resize(){
+        const oldBuckets = this.buckets;
+
+        this.capacity *= 2;
+        this.buckets = new Array(this.capacity).fill(null);
+        this.size = 0;
+
+        for(let i=0; i<oldBuckets.length; i++){
+            let current = oldBuckets[i];
+
+            while(current){
+                this.set(current.key, current.value);
+                current = current.next;
+            }
+        }
+    }
+}
 export { HashMap };
